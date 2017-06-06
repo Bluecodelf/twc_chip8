@@ -8,23 +8,23 @@
 
 #include <cstdint>
 
-#define REGISTER_COUNT 16
-#define STACK_SIZE 16
-#define MEMORY_SIZE 0x1000
+#define C8_REGISTER_COUNT 16
+#define C8_STACK_SIZE 16
+#define C8_MEMORY_SIZE 0x1000
 
-namespace Chip8
+namespace c8
 {
-    union Memory
+    union memory
     {
-        struct Interpreter
+        struct interpreter
         {
-            std::uint8_t v[REGISTER_COUNT];
+            std::uint8_t v[C8_REGISTER_COUNT];
             std::uint8_t dt, st, sp;
             std::uint16_t i, pc;
-            std::uint16_t stack[STACK_SIZE];
+            std::uint16_t stack[C8_STACK_SIZE];
             std::uint8_t font[80];
         } interpreter;
-        std::uint8_t memory[MEMORY_SIZE];
+        std::uint8_t memory[C8_MEMORY_SIZE];
     };
 }
 

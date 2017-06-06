@@ -7,18 +7,19 @@
 #define TWC_CHIP8_CPU_H
 
 #include <vector>
-#include "Memory.h"
+#include "memory.h"
 
-namespace Chip8
+namespace c8
 {
-    class CPU
+    class cpu
     {
     public:
-        CPU();
+        cpu();
 
         void load_in_memory(const std::vector<std::uint8_t> &data, unsigned int offset);
+        void step();
     private:
-        Memory _memory;
+        memory _memory;
     };
 }
 

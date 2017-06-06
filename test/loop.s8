@@ -1,0 +1,19 @@
+        LD V0, 0
+        LD V1, 1
+        LD V2, 42
+        LD V3, 60
+
+loop:   CALL %incr
+        SE V0, V2
+        JP %loop
+        CALL %wait
+        JP 0x200
+
+incr:   ADD V0, V1
+        RET
+
+wait:   LD DT, V3
+w_loop: LD V4, DT
+        SE V4, 0
+        JP %w_loop
+        RET

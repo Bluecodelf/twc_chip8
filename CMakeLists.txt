@@ -5,3 +5,4 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(libtwc-chip8)
 add_subdirectory(twc-c8run)
+add_subdirectory(twc-c8asm)
