@@ -12,12 +12,9 @@
 #define C8_STACK_SIZE 16
 #define C8_MEMORY_SIZE 0x1000
 
-namespace c8
-{
-    union memory
-    {
-        struct interpreter
-        {
+namespace c8 {
+    union memory {
+        struct interpreter {
             std::uint8_t v[C8_REGISTER_COUNT];
             std::uint8_t dt, st, sp;
             std::uint16_t i, pc;

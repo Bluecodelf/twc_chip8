@@ -65,7 +65,7 @@ std::string operand::to_string() const {
 
 std::string instruction::to_string() const {
     std::stringstream ss;
-    ss << OPCODE_STRINGS[opcode];
+    ss << OPCODE_STRINGS[code];
     for (int it = 0; it < C8_MAX_OPERANDS; it++) {
         if (operands[it].type == NONE) {
             break;

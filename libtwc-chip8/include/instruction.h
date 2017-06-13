@@ -10,10 +10,8 @@
 
 #define C8_MAX_OPERANDS 3
 
-namespace c8
-{
-    enum opcode
-    {
+namespace c8 {
+    enum opcode {
         CLS,
         RET,
         JP,
@@ -35,8 +33,7 @@ namespace c8
         SKNP
     };
 
-    enum operand_type
-    {
+    enum operand_type {
         NONE,
         ADDRESS,
         REGISTER,
@@ -50,17 +47,15 @@ namespace c8
         ARRAY_POINTER
     };
 
-    struct operand
-    {
+    struct operand {
         operand_type type;
         uint16_t value;
 
         std::string to_string() const;
     };
 
-    struct instruction
-    {
-        opcode opcode;
+    struct instruction {
+        opcode code;
         operand operands[C8_MAX_OPERANDS];
 
         std::string to_string() const;

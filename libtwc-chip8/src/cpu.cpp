@@ -3,9 +3,10 @@
 // Copyright (c) 2017 Tiwind Software. All rights reserved.
 //
 
+#include "cpu.h"
+
 #include <iostream>
 #include <cstring>
-#include "cpu.h"
 
 using namespace c8;
 
@@ -30,23 +31,15 @@ namespace {
     };
 }
 
-cpu::cpu()
-{
+cpu::cpu() {
     // Copy the font in memory
     memcpy(_memory.interpreter.font, FONT, 80);
 }
 
-void cpu::load_in_memory(const std::vector<std::uint8_t> &data, unsigned int offset)
-{
-    unsigned int copy = data.size();
-    if (copy + offset > C8_MEMORY_SIZE)
-    {
+void cpu::load_in_memory(const std::vector<std::uint8_t> &data, unsigned int offset) {
+    unsigned int copy = static_cast<unsigned int>(data.size());
+    if (copy + offset > C8_MEMORY_SIZE) {
         copy = C8_MEMORY_SIZE - offset;
     }
     memcpy(_memory.memory + offset, &data[0], copy);
-}
-
-void cpu::step()
-{
-    // TODO: unimplemented yet
 }
