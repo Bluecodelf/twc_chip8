@@ -21,31 +21,22 @@ public:
     tokenizer(std::string const &input);
 
     char const next();
-
     char const peek() const;
-
     bool has_next() const;
 
     void save_position();
-
     void reset_position();
-
-    void skip_whitespace();
+    void skip_separators();
 
     void begin_record();
-
     void end_record();
-
     std::string get_record() const;
 
     tokenizer_cursor get_cursor() const;
-
     tokenizer_cursor get_saved_cursor() const;
 
     iterator begin() const;
-
     iterator end() const;
-
 private:
     std::string const &_input;
     tokenizer_cursor _cursor;

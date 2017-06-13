@@ -33,7 +33,7 @@ struct token {
 
 class matcher_base {
 public:
-    virtual bool matches(tokenizer &tokenizer) const = 0;
+    virtual bool matches(tokenizer &input) const = 0;
 };
 
 struct match_rule {
@@ -43,12 +43,11 @@ struct match_rule {
 
 class lexer_exception : public std::exception {
 public:
-    explicit lexer_exception(std::string const &error, tokenizer const &tokenizer);
+    explicit lexer_exception(std::string const &error, tokenizer const &input);
 
     virtual ~lexer_exception() {}
 
     virtual char const *what() const noexcept;
-
 private:
     std::string _message;
 };
@@ -60,13 +59,10 @@ public:
     void add_match_rule(match_rule rule);
 
     token lex_next();
-
     std::vector<token> lex_all();
-
     bool has_next();
-
 private:
-    tokenizer _tokenizer;
+    tokenizer _input;
     std::vector<match_rule> _match_rules;
 };
 

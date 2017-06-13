@@ -50,16 +50,16 @@ namespace {
                 _distinct(distinct),
                 _keyword(keyword) {}
 
-        virtual bool matches(tokenizer &tokenizer) const {
-            tokenizer.skip_whitespace();
-            tokenizer.begin_record();
+        virtual bool matches(tokenizer &input) const {
+            input.skip_separators();
+            input.begin_record();
             for (int it = 0; it < _keyword.size(); it++) {
-                if (tokenizer.next() != _keyword[it]) {
+                if (input.next() != _keyword[it]) {
                     return false;
                 }
             }
-            tokenizer.end_record();
-            return !(_distinct && tokenizer.has_next() && !isspace(tokenizer.peek()));
+            input.end_record();
+            return !(_distinct && input.has_next() && !isspace(input.peek()));
         }
 
     private:
@@ -72,23 +72,23 @@ namespace {
         regex_matcher(std::regex const &regex) :
                 _regex(regex) {}
 
-        virtual bool matches(tokenizer &tokenizer) const {
-            tokenizer.skip_whitespace();
-            tokenizer.begin_record();
+        virtual bool matches(tokenizer &input) const {
+            input.skip_separators();
+            input.begin_record();
 
-            auto it = tokenizer.begin();
+            auto it = input.begin();
             std::smatch res;
-            if (std::regex_search(it, tokenizer.end(), res, _regex) && res[0].first == it) {
+            if (std::regex_search(it, input.end(), res, _regex) && res[0].first == it) {
                 // Start record from first marked sub-expresssion if the regex contains one
                 if (res.size() > 1) {
-                    while (tokenizer.next() && ++it != res[1].first);
-                    tokenizer.begin_record();
-                    while (tokenizer.next() && ++it != res[1].second);
-                    tokenizer.end_record();
-                    while (tokenizer.next() && ++it != res[0].second);
+                    while (input.next() && ++it != res[1].first);
+                    input.begin_record();
+                    while (input.next() && ++it != res[1].second);
+                    input.end_record();
+                    while (input.next() && ++it != res[0].second);
                 } else {
-                    while (tokenizer.next() && ++it != res[0].second);
-                    tokenizer.end_record();
+                    while (input.next() && ++it != res[0].second);
+                    input.end_record();
                 }
                 return true;
             } else {
@@ -101,9 +101,9 @@ namespace {
     };
 }
 
-lexer_exception::lexer_exception(std::string const &error, tokenizer const &tokenizer) {
+lexer_exception::lexer_exception(std::string const &error, tokenizer const &input) {
     std::stringstream ss;
-    tokenizer_cursor cursor = tokenizer.get_cursor();
+    tokenizer_cursor cursor = input.get_cursor();
     ss << "[LEXER] Error at (" << cursor.line
        << ":" << cursor.column << "): " << error;
     _message = ss.str();
@@ -114,7 +114,7 @@ char const *lexer_exception::what() const noexcept {
 }
 
 lexer::lexer(std::string const &input) :
-        _tokenizer{input} {
+        _input{input} {
     // Instructions (JP, ADD, CALL...)
     for (int it = 0; it < INSTRUCTION_COUNT; it++) {
         add_match_rule(match_rule{
@@ -155,6 +155,12 @@ lexer::lexer(std::string const &input) :
             std::make_unique<keyword_matcher>(",", false)
     });
 
+    // Line separator (\n)
+    add_match_rule(match_rule{
+            token_type::LINE_SEPARATOR,
+            std::make_unique<keyword_matcher>("\n", false)
+    });
+
     // Label (of format 'label:')
     add_match_rule(match_rule{
             token_type::LABEL,
@@ -173,21 +179,21 @@ void lexer::add_match_rule(match_rule rule) {
 }
 
 token lexer::lex_next() {
-    _tokenizer.skip_whitespace();
+    _input.skip_separators();
     for (auto it = _match_rules.cbegin(); it != _match_rules.cend(); it++) {
-        _tokenizer.save_position();
-        if (it->matcher->matches(_tokenizer)) {
-            tokenizer_cursor cursor = _tokenizer.get_saved_cursor();
+        _input.save_position();
+        if (it->matcher->matches(_input)) {
+            tokenizer_cursor cursor = _input.get_saved_cursor();
             return token{
                     it->type,
-                    _tokenizer.get_record(),
+                    _input.get_record(),
                     cursor.line,
                     cursor.column
             };
         }
-        _tokenizer.reset_position();
+        _input.reset_position();
     }
-    throw lexer_exception{"unrecognized token", _tokenizer};
+    throw lexer_exception{"unrecognized token", _input};
 }
 
 std::vector<token> lexer::lex_all() {
@@ -199,6 +205,6 @@ std::vector<token> lexer::lex_all() {
 }
 
 bool lexer::has_next() {
-    _tokenizer.skip_whitespace();
-    return _tokenizer.has_next();
+    _input.skip_separators();
+    return _input.has_next();
 }

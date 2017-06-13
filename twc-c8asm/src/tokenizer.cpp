@@ -5,12 +5,26 @@
 
 #include "tokenizer.h"
 
+namespace {
+    constexpr char const *TOKENIZER_SEPARATORS = " \t\r";
+
+    inline bool is_separator(char const c) {
+        for (int it = 0; TOKENIZER_SEPARATORS[it]; it++) {
+            if (TOKENIZER_SEPARATORS[it] == c) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 tokenizer::tokenizer(std::string const &input) :
         _input(input),
-        _cursor{0, 1, 1},
-        _saved_cursor(_cursor),
         _record_begin(0),
-        _record_count(0) {}
+        _record_count(0) {
+    _cursor = {0, 1, 1};
+    _saved_cursor = _cursor;
+}
 
 inline char const tokenizer::next() {
     if (has_next()) {
@@ -46,8 +60,8 @@ void tokenizer::reset_position() {
     _cursor = _saved_cursor;
 }
 
-void tokenizer::skip_whitespace() {
-    while (isspace(peek())) {
+void tokenizer::skip_separators() {
+    while (is_separator(peek())) {
         next();
     }
 }
@@ -57,7 +71,7 @@ void tokenizer::begin_record() {
 }
 
 void tokenizer::end_record() {
-    _record_count  = (_cursor.idx > _record_begin) ? (_cursor.idx - _record_begin) : 0;
+    _record_count = (_cursor.idx > _record_begin) ? (_cursor.idx - _record_begin) : 0;
 }
 
 std::string tokenizer::get_record() const {

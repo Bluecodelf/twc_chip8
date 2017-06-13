@@ -14,7 +14,6 @@
 class parsing_exception : public std::exception {
 public:
     explicit parsing_exception(std::string const &error, unsigned int line_number = 0);
-
     virtual ~parsing_exception() {}
 
     virtual char const *what() const noexcept;
