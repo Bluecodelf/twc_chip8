@@ -1,9 +1,11 @@
 //
-// Created by Laurent Fourrier on 2017-06-06.
+// Created by Laurent Fourrier on 2017-06-15.
 // Copyright (c) 2017 Tiwind Software. All rights reserved.
 //
 
-#include "tokenizer.h"
+#include "parsing/tokenizer.h"
+
+using namespace c8::detail;
 
 namespace {
     constexpr char const *TOKENIZER_SEPARATORS = " \t\r";

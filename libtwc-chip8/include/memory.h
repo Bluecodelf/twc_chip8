@@ -13,15 +13,19 @@
 #define C8_MEMORY_SIZE 0x1000
 
 namespace c8 {
+    using vm_address = std::uint16_t;
+    using vm_register = std::uint8_t;
+    using vm_byte = std::uint8_t;
+
     union memory {
         struct interpreter {
-            std::uint8_t v[C8_REGISTER_COUNT];
-            std::uint8_t dt, st, sp;
-            std::uint16_t i, pc;
-            std::uint16_t stack[C8_STACK_SIZE];
-            std::uint8_t font[80];
+            vm_register v[C8_REGISTER_COUNT];
+            vm_register dt, st, sp;
+            vm_address i, pc;
+            vm_address stack[C8_STACK_SIZE];
+            vm_byte font[80];
         } interpreter;
-        std::uint8_t memory[C8_MEMORY_SIZE];
+        vm_byte memory[C8_MEMORY_SIZE];
     };
 }
 

@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "lexer.h"
+#include <program.h>
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -18,10 +18,17 @@ int main(int argc, char **argv) {
                      std::istreambuf_iterator<char>());
 
     try {
-        lexer lexer(data);
-        std::vector<token> tokens = lexer.lex_all();
-        return 0;
-    } catch (lexer_exception const &e) {
+        c8::program program = c8::parse_assembly(data);
+        std::cout << "Successfully read program!" << std::endl;
+        std::cout << "Labels: " << std::endl;
+        for (auto it = program.labels.cbegin(); it != program.labels.cend(); it++) {
+            std::cout << "\t" << it->first << " : 0x" << std::hex << it->second << std::endl;
+        }
+        std::cout << std::dec << "Instructions: " << std::endl;
+        for (auto it = program.instructions.cbegin(); it != program.instructions.cend(); it++) {
+            std::cout << "\t" << it->to_string();
+        }
+    } catch (c8::parsing_exception const &e) {
         std::cerr << e.what() << std::endl;
     }
 

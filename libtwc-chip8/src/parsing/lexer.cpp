@@ -1,49 +1,17 @@
 //
-// Created by Laurent Fourrier on 2017-06-06.
+// Created by Laurent Fourrier on 2017-06-15.
 // Copyright (c) 2017 Tiwind Software. All rights reserved.
 //
 
 #include "lexer.h"
+#include "constants.h"
+#include "program.h"
 
 #include <regex>
 
+using namespace c8::detail;
+
 namespace {
-    unsigned int const INSTRUCTION_COUNT = 19;
-
-    char const *INSTRUCTION_STRINGS[INSTRUCTION_COUNT] = {
-            "CLS",
-            "RET",
-            "JP",
-            "CALL",
-            "SE",
-            "SNE",
-            "LD",
-            "ADD",
-            "OR",
-            "AND",
-            "XOR",
-            "SUB",
-            "SHR",
-            "SUBN",
-            "SHL",
-            "RND",
-            "DRW",
-            "SKP",
-            "SKNP"
-    };
-
-    unsigned int const ARG_KEYWORD_COUNT = 7;
-
-    char const *ARG_KEYWORD_STRINGS[ARG_KEYWORD_COUNT] = {
-            "I",
-            "K",
-            "DT",
-            "ST",
-            "F",
-            "B",
-            "[I]"
-    };
-
     class keyword_matcher : public matcher_base {
     public:
         keyword_matcher(std::string const &keyword, bool distinct = false) :
@@ -99,77 +67,75 @@ namespace {
     private:
         std::regex _regex;
     };
-}
 
-lexer_exception::lexer_exception(std::string const &error, tokenizer const &input) {
-    std::stringstream ss;
-    tokenizer_cursor cursor = input.get_cursor();
-    ss << "[LEXER] Error at (" << cursor.line
-       << ":" << cursor.column << "): " << error;
-    _message = ss.str();
-}
-
-char const *lexer_exception::what() const noexcept {
-    return &_message[0];
+    class lexer_exception : public c8::parsing_exception {
+    public:
+        lexer_exception(std::string const &error, tokenizer const &input) {
+            std::stringstream ss;
+            tokenizer_cursor cursor = input.get_cursor();
+            ss << "[LEXER] Error at (" << cursor.line << ":" << cursor.column << "): " << error;
+            _message = ss.str();
+        }
+    };
 }
 
 lexer::lexer(std::string const &input) :
         _input{input} {
     // Instructions (JP, ADD, CALL...)
-    for (int it = 0; it < INSTRUCTION_COUNT; it++) {
+    for (int it = 0; it < C8_INSTRUCTION_COUNT; it++) {
         add_match_rule(match_rule{
-                token_type::INSTRUCTION,
-                std::make_unique<keyword_matcher>(INSTRUCTION_STRINGS[it], true)
+                token_type::TOKEN_INSTRUCTION,
+                std::make_unique<keyword_matcher>(detail::INSTRUCTION_CODE_STRINGS[it], true)
         });
     }
 
     // Addresses (for example 0x042A)
     add_match_rule(match_rule{
-            token_type::ADDRESS,
+            token_type::TOKEN_ADDRESS,
             std::make_unique<regex_matcher>(std::regex("^0x[0-9a-fA-F]+"))
     });
 
     // Registers, of format Vn
     add_match_rule(match_rule{
-            token_type::REGISTER,
+            token_type::TOKEN_REGISTER,
             std::make_unique<regex_matcher>(std::regex("^V[0-9a-fA-F]"))
     });
 
     // Number values
     add_match_rule(match_rule{
-            token_type::NUMBER,
+            token_type::TOKEN_NUMBER,
             std::make_unique<regex_matcher>(std::regex("^[0-9]+"))
     });
 
     // "Static" argument keywords (I, DT, ST...)
-    for (int it = 0; it < ARG_KEYWORD_COUNT; it++) {
+    for (int it = 0; it < C8_STATIC_ARGUMENT_COUNT; it++) {
         add_match_rule(match_rule{
-                token_type::ARG_KEYWORD,
-                std::make_unique<keyword_matcher>(ARG_KEYWORD_STRINGS[it], false)
+                token_type::TOKEN_ARG_KEYWORD,
+                std::make_unique<keyword_matcher>(detail::STATIC_ARGUMENT_STRINGS[it], false)
         });
     }
 
     // Simple argument separator (',')
     add_match_rule(match_rule{
-            token_type::ARG_SEPARATOR,
+            token_type::TOKEN_ARG_SEPARATOR,
             std::make_unique<keyword_matcher>(",", false)
     });
 
     // Line separator (\n)
     add_match_rule(match_rule{
-            token_type::LINE_SEPARATOR,
+            token_type::TOKEN_LINE_SEPARATOR,
             std::make_unique<keyword_matcher>("\n", false)
     });
 
     // Label (of format 'label:')
     add_match_rule(match_rule{
-            token_type::LABEL,
+            token_type::TOKEN_LABEL,
             std::make_unique<regex_matcher>(std::regex("^[0-9a-zA-Z\\-_]+:"))
     });
 
     // Label reference (of format '%label', for use in arguments)
     add_match_rule(match_rule{
-            token_type::LABEL_REF,
+            token_type::TOKEN_LABEL_REF,
             std::make_unique<regex_matcher>(std::regex("^%[0-9a-zA-Z\\-_]+"))
     });
 }
@@ -180,18 +146,28 @@ void lexer::add_match_rule(match_rule rule) {
 
 token lexer::lex_next() {
     _input.skip_separators();
-    for (auto it = _match_rules.cbegin(); it != _match_rules.cend(); it++) {
-        _input.save_position();
-        if (it->matcher->matches(_input)) {
-            tokenizer_cursor cursor = _input.get_saved_cursor();
-            return token{
-                    it->type,
-                    _input.get_record(),
-                    cursor.line,
-                    cursor.column
-            };
+    if (has_next()) {
+        for (auto it = _match_rules.cbegin(); it != _match_rules.cend(); it++) {
+            _input.save_position();
+            if (it->matcher->matches(_input)) {
+                tokenizer_cursor cursor = _input.get_saved_cursor();
+                return token{
+                        it->type,
+                        _input.get_record(),
+                        cursor.line,
+                        cursor.column
+                };
+            }
+            _input.reset_position();
         }
-        _input.reset_position();
+    } else {
+        tokenizer_cursor cursor = _input.get_saved_cursor();
+        return token {
+                TOKEN_END,
+                "",
+                cursor.line,
+                cursor.column
+        };
     }
     throw lexer_exception{"unrecognized token", _input};
 }
@@ -201,6 +177,7 @@ std::vector<token> lexer::lex_all() {
     while (has_next()) {
         tokens.push_back(lex_next());
     }
+    tokens.push_back(lex_next()); // Push the final TOKEN_END
     return tokens;
 }
 

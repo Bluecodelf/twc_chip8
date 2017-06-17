@@ -7,11 +7,14 @@
 #define TWC_CHIP8_INSTRUCTION_H
 
 #include <string>
+#include <boost/blank.hpp>
+#include <boost/variant.hpp>
+#include "memory.h"
 
-#define C8_MAX_OPERANDS 3
+#define C8_MAX_ARGUMENTS 3
 
 namespace c8 {
-    enum opcode {
+    enum instruction_code {
         CLS,
         RET,
         JP,
@@ -33,7 +36,7 @@ namespace c8 {
         SKNP
     };
 
-    enum operand_type {
+    enum argument_type {
         NONE,
         ADDRESS,
         REGISTER,
@@ -47,16 +50,28 @@ namespace c8 {
         ARRAY_POINTER
     };
 
-    struct operand {
-        operand_type type;
-        uint16_t value;
+    struct argument {
+        argument_type type;
+        union {
+            vm_byte byte;
+            vm_register reg;
+            vm_address addr;
+        } value;
+
+        std::string to_string() const;
+    };
+
+    struct label_argument {
+        std::string label_identifier;
 
         std::string to_string() const;
     };
 
     struct instruction {
-        opcode code;
-        operand operands[C8_MAX_OPERANDS];
+        using dyn_argument = boost::variant<boost::blank, argument, label_argument>;
+
+        instruction_code code;
+        dyn_argument arguments[C8_MAX_ARGUMENTS];
 
         std::string to_string() const;
     };
