@@ -28,7 +28,10 @@ namespace c8 {
 
             definition parse_next();
             bool has_next() const;
+
+            int get_line() const;
         private:
+            int _line;
             c8::vm_address _current_addr;
             std::vector<token> const &_tokens;
             std::vector<token>::const_iterator _token_it;

@@ -7,7 +7,9 @@
 #include "parsing/lexer.h"
 #include "parsing/parser.h"
 
-#define C8_DEFINITION_GET(type, value) boost::get<type, \
+#include <sstream>
+
+#define _DEFINITION_GET(type, value) boost::get<type, \
 boost::blank, c8::instruction, detail::label_definition>(value)
 
 using namespace c8;
@@ -20,16 +22,22 @@ char const *parsing_exception::what() const noexcept {
 }
 
 program c8::parse_assembly(std::string const &input) {
-    program prog;
+    program prog{};
     detail::lexer lexer{input};
     std::vector<detail::token> tokens = lexer.lex_all();
     detail::parser parser{tokens};
     while (parser.has_next()) {
         detail::parser::definition definition = parser.parse_next();
         if (definition.type() == typeid(c8::instruction)) {
-            prog.instructions.push_back(C8_DEFINITION_GET(c8::instruction, definition));
+            instruction inst = _DEFINITION_GET(c8::instruction, definition);
+            if (!inst.is_valid()) {
+                std::stringstream ss;
+                ss << "[LOGIC] Invalid arguments for instruction at line " << parser.get_line();
+                throw parsing_exception(ss.str());
+            }
+            prog.instructions.push_back(inst);
         } else if (definition.type() == typeid(detail::label_definition)) {
-            detail::label_definition label_definition = C8_DEFINITION_GET(
+            detail::label_definition label_definition = _DEFINITION_GET(
                     detail::label_definition, definition);
             prog.labels[label_definition.label] = label_definition.addr;
         }

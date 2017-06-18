@@ -127,6 +127,7 @@ namespace {
 }
 
 parser::parser(std::vector<token> const &tokens):
+        _line(1),
         _current_addr(0x200),
         _tokens(tokens),
         _token_it(tokens.cbegin()) {}
@@ -137,6 +138,7 @@ parser::definition parser::parse_next() {
         _token_it++;
     }
 
+    _line = _token_it->line;
     if (_token_it->type == TOKEN_INSTRUCTION) {
         // Parse the instruction and its arguments
         c8::instruction inst;
@@ -176,4 +178,8 @@ parser::definition parser::parse_next() {
 
 bool parser::has_next() const {
     return (_token_it->type != TOKEN_END);
+}
+
+int parser::get_line() const {
+    return _line;
 }

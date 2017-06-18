@@ -16,8 +16,8 @@
 namespace c8 {
     // A program represent a set of instruction (along with its labels, if any)
     struct program {
-        std::map<std::string, vm_address> labels;
-        std::vector<instruction> instructions;
+        std::map<std::string, vm_address> labels{};
+        std::vector<instruction> instructions{};
     };
 
     class parsing_exception : public std::exception {

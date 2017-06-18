@@ -73,6 +73,8 @@ namespace c8 {
         instruction_code code;
         dyn_argument arguments[C8_MAX_ARGUMENTS];
 
+        bool is_valid() const;
+
         std::string to_string() const;
     };
 }
