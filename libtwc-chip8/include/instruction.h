@@ -14,6 +14,8 @@
 #define C8_MAX_ARGUMENTS 3
 
 namespace c8 {
+    using vm_instruction = std::uint16_t;
+
     enum instruction_code {
         CLS,
         RET,
@@ -50,6 +52,17 @@ namespace c8 {
         ARRAY_POINTER
     };
 
+    class instruction_exception : public std::exception {
+    public:
+        explicit instruction_exception(std::string const &message);
+
+        virtual ~instruction_exception() {}
+
+        virtual char const *what() const noexcept;
+    private:
+        std::string _message;
+    };
+
     struct argument {
         argument_type type;
         union {
@@ -59,6 +72,7 @@ namespace c8 {
         } value;
 
         std::string to_string() const;
+        vm_instruction get_value() const;
     };
 
     struct label_argument {
@@ -76,6 +90,7 @@ namespace c8 {
         bool is_valid() const;
 
         std::string to_string() const;
+        vm_instruction to_vm_repr() const;
     };
 }
 

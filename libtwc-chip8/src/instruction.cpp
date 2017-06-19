@@ -59,6 +59,21 @@ namespace {
         }
     };
 
+    class get_value_visitor : public boost::static_visitor<vm_instruction> {
+    public:
+        vm_instruction operator()(boost::blank const &blank) const {
+            return 0;
+        }
+
+        vm_instruction operator()(argument const &arg) const {
+            return arg.get_value();
+        }
+
+        vm_instruction operator()(label_argument const &arg) const {
+            throw instruction_exception("A label does not have any VM representation.");
+        }
+    };
+
     inline int get_offset(int mask) {
         if (mask == 0) {
             return 0;
@@ -138,20 +153,37 @@ namespace {
             {ADD,  {{_I2(0x7000, REGISTER, 0x0F00, WORD, 0x00FF),
                             _I2(0x8004, REGISTER, 0x0F00, REGISTER, 0x00F0),
                             _I2(0xF01E, POINTER, 0x0000, REGISTER, 0x0F00)}}},
-            {OR, {{_I2(0x8001, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
-            {AND, {{_I2(0x8002, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
-            {XOR, {{_I2(0x8003, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
-            {SUB, {{_I2(0x8005, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
-            {SHR, {{_I1(0x8006, REGISTER, 0x0F00),
-                           _I2(0x8006, REGISTER, 0x0F00, REGISTER, 0x0000)}}},
+            {OR,   {{_I2(0x8001, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
+            {AND,  {{_I2(0x8002, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
+            {XOR,  {{_I2(0x8003, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
+            {SUB,  {{_I2(0x8005, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
+            {SHR,  {{_I1(0x8006, REGISTER, 0x0F00),
+                            _I2(0x8006, REGISTER, 0x0F00, REGISTER, 0x0000)}}},
             {SUBN, {{_I2(0x8007, REGISTER, 0x0F00, REGISTER, 0x00F0)}}},
-            {SHL, {{_I1(0x800E, REGISTER, 0x0F00),
-                           _I2(0x8006, REGISTER, 0x0F00, REGISTER, 0x0000)}}},
-            {RND, {{_I2(0xC000, REGISTER, 0x0F00, WORD, 0x00FF)}}},
-            {DRW, {{_I3(0xD000, REGISTER, 0x0F00, REGISTER, 0x00F0, WORD, 0x000F)}}},
-            {SKP, {{_I1(0xE09E, REGISTER, 0x0F00)}}},
+            {SHL,  {{_I1(0x800E, REGISTER, 0x0F00),
+                            _I2(0x8006, REGISTER, 0x0F00, REGISTER, 0x0000)}}},
+            {RND,  {{_I2(0xC000, REGISTER, 0x0F00, WORD, 0x00FF)}}},
+            {DRW,  {{_I3(0xD000, REGISTER, 0x0F00, REGISTER, 0x00F0, WORD, 0x000F)}}},
+            {SKP,  {{_I1(0xE09E, REGISTER, 0x0F00)}}},
             {SKNP, {{_I1(0xE0A1, REGISTER, 0x0F00)}}}
     };
+
+    instruction_variant_bin const &get_instruction_variant(instruction const &inst) {
+        instruction_bin const &bin_definition = INSTRUCTION_BINARY_DEFINITIONS.at(inst.code);
+        for (auto it = bin_definition.variants.cbegin(); it != bin_definition.variants.cend(); it++) {
+            if (it->matches_instruction(inst)) {
+                return *it;
+            }
+        }
+        throw instruction_exception("No variant found for those arguments.");
+    }
+}
+
+instruction_exception::instruction_exception(std::string const &message) :
+        _message(message) {}
+
+char const *instruction_exception::what() const noexcept {
+    return &_message[0];
 }
 
 std::string argument::to_string() const {
@@ -172,6 +204,19 @@ std::string argument::to_string() const {
             ss << detail::STATIC_ARGUMENT_STRINGS[type - 4];
     }
     return ss.str();
+}
+
+vm_instruction argument::get_value() const {
+    switch (type) {
+        case ADDRESS:
+            return static_cast<vm_instruction>(value.addr);
+        case REGISTER:
+            return static_cast<vm_instruction>(value.reg);
+        case WORD:
+            return static_cast<vm_instruction>(value.byte);
+        default:
+            return 0;
+    }
 }
 
 std::string label_argument::to_string() const {
@@ -215,4 +260,17 @@ std::string instruction::to_string() const {
     }
     ss << std::endl;
     return ss.str();
+}
+
+vm_instruction instruction::to_vm_repr() const {
+    instruction_variant_bin const &variant = get_instruction_variant(*this);
+    int vm_repr = variant.opcode;
+    for (int it = 0; it < C8_MAX_ARGUMENTS; it++) {
+        int argument_value = boost::apply_visitor(get_value_visitor(), arguments[it]);
+        if (variant.arguments[it].mask != 0 && argument_value != 0) {
+            int mask = variant.arguments[it].mask;
+            vm_repr &= (argument_value << get_offset(mask)) & mask;
+        }
+    }
+    return static_cast<vm_instruction>(vm_repr & 0xFFFF);
 }
