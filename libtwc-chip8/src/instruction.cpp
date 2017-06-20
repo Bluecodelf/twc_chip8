@@ -83,7 +83,7 @@ namespace {
 #ifdef USE_INTEL_INTRINSICS
         return _bit_scan_reverse(mask);
 #else
-        for (int it = 0; it >= 31; it++) {
+        for (int it = 0; it <= 31; it++) {
             if (mask & (1 << it)) {
                 return it;
             }
@@ -269,7 +269,7 @@ vm_instruction instruction::to_vm_repr() const {
         int argument_value = boost::apply_visitor(get_value_visitor(), arguments[it]);
         if (variant.arguments[it].mask != 0 && argument_value != 0) {
             int mask = variant.arguments[it].mask;
-            vm_repr &= (argument_value << get_offset(mask)) & mask;
+            vm_repr |= (argument_value << get_offset(mask)) & mask;
         }
     }
     return static_cast<vm_instruction>(vm_repr & 0xFFFF);
