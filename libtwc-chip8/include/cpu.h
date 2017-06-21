@@ -11,6 +11,11 @@
 #include "memory.h"
 
 namespace c8 {
+    class graphics_bus {
+    public:
+        virtual ~graphics_bus() {}
+    };
+
     class cpu {
     public:
         cpu();
@@ -18,6 +23,7 @@ namespace c8 {
         void load_in_memory(const std::vector<std::uint8_t> &data, unsigned int offset);
     private:
         memory _memory;
+
     };
 }
 
