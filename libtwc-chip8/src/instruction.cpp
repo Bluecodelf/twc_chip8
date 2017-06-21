@@ -13,6 +13,9 @@
 #if defined(__i386) || defined(_M_IX86)
 #define USE_INTEL_INTRINSICS
 #include <immintrin.h>
+#elif defined(__amd64) || defined(_M_AMD64)
+#define USE_INTEL_INTRINSICS
+#include <x86intrin.h>
 #endif
 
 #define _A(t, m) instruction_argument_bin{t, m}
