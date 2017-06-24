@@ -20,7 +20,7 @@ namespace c8 {
     union memory {
         struct interpreter {
             vm_register v[C8_REGISTER_COUNT];
-            vm_register dt, st, sp;
+            vm_register sp;
             vm_address i, pc;
             vm_address stack[C8_STACK_SIZE];
             vm_byte font[80];

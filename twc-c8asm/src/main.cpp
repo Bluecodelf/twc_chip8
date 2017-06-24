@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <program.h>
+#include <cpu.h>
 
 short const DUMMY_DATA = 1;
 #define IS_LITTLE_ENDIAN ((*((char const *)&DUMMY_DATA)) == 1)

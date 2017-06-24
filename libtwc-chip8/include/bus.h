@@ -13,6 +13,9 @@ namespace c8 {
 
         // Should return the old pixel state
         virtual bool set_pixel_state(int x, int y, bool new_state) = 0;
+
+        virtual void update() = 0;
+        virtual void clear() = 0;
     };
 
     class keyboard_bus {
@@ -21,6 +24,9 @@ namespace c8 {
 
         // Should be blocking
         virtual vm_byte get_key() = 0;
+
+        // This one is not blocking
+        virtual bool is_key_pressed(vm_byte key) = 0;
     };
 
     // Take note that there can be two timers connected to the CPU (delay and sound)
@@ -29,7 +35,7 @@ namespace c8 {
         virtual ~timer_bus() {}
 
         virtual void set_value(vm_byte value) = 0;
-        virtual void get_value(vm_byte value) = 0;
+        virtual vm_byte get_value() = 0;
 
         virtual void wait() = 0;
     };
@@ -38,7 +44,7 @@ namespace c8 {
     public:
         virtual ~sound_bus() {}
 
-        virtual bool set_active(bool active = true) = 0;
+        virtual void play_sound(vm_byte duration) = 0;
     };
 }
 
