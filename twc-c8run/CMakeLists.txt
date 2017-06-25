@@ -13,3 +13,5 @@ add_executable(twc-c8run
 target_link_libraries(twc-c8run
         ${SDL2_LIBRARIES}
         libtwc-chip8)
+
+install(TARGETS twc-c8run DESTINATION bin)
