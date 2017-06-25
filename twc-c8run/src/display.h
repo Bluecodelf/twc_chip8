@@ -11,7 +11,8 @@ class display : public c8::display_bus {
 public:
     display(SDL_Renderer *renderer);
 
-    virtual bool set_pixel_state(int x, int y, bool new_state);
+    virtual void set_pixel_state(int x, int y, bool new_state);
+    virtual bool get_pixel_state(int x, int y);
 
     virtual void update();
     virtual void clear();

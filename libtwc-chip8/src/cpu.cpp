@@ -46,7 +46,7 @@ cpu::cpu(
 ) :
         _display(display),
         _keyboard(keyboard),
-        _timer(_timer),
+        _timer(timer),
         _sound(sound) {
     // Initialize the random engine
     std::random_device rand_device;
@@ -151,7 +151,7 @@ void cpu::step() {
                 }
                     break;
                 case 5:
-                    vf = static_cast<vm_byte>((lhs > rhs) ? 1 : 0);
+                    vf = static_cast<vm_byte>((lhs >= rhs) ? 1 : 0);
                     lhs -= rhs;
                     break;
                 case 6:
@@ -159,7 +159,7 @@ void cpu::step() {
                     lhs /= 2;
                     break;
                 case 7:
-                    vf = static_cast<vm_byte>((rhs > lhs) ? 1 : 0);
+                    vf = static_cast<vm_byte>((rhs >= lhs) ? 1 : 0);
                     lhs = rhs - lhs;
                     break;
                 case 0xE:
@@ -190,11 +190,16 @@ void cpu::step() {
             int sprite_size = _NIB(_A1);
             int y_offset = _REG(_A2);
             int x_offset = _REG(_A3);
+            cpu_data->v[15] = 0;
             for (int y = 0; y < sprite_size; y++) {
                 vm_byte row = _memory.memory[cpu_data->i + y];
                 for (int x = 0; x < 8; x++) {
-                    _display.set_pixel_state(x + x_offset, y + y_offset,
-                                             (((row >> (7 - x)) & 1) == 1));
+                    bool new_state = (((row >> (7 - x)) & 1) == 1);
+                    bool old_state = _display.get_pixel_state(x + x_offset, y + y_offset);
+                    _display.set_pixel_state(x + x_offset, y + y_offset, new_state ^ old_state);
+                    if (new_state & old_state) {
+                        cpu_data->v[15] = 1;
+                    }
                 }
             }
             _display.update();
@@ -203,7 +208,7 @@ void cpu::step() {
             break;
         case 0xE000: {
             bool pressed = _keyboard.is_key_pressed(_REG(_A3));
-            cpu_data->pc += ((_BYTE(_A3) == 0xA1) ^ pressed) ? 4 : 2;
+            cpu_data->pc += ((_BYTE(_A1) == 0xA1) ^ pressed) ? 4 : 2;
         }
             break;
         case 0xF000: {
@@ -241,7 +246,7 @@ void cpu::step() {
                     break;
                 case 0x65: {
                     vm_byte reg_count = _NIB(_A3);
-                    for (int it = 0; it < reg_count; it++) {
+                    for (int it = 0; it <= reg_count; it++) {
                         cpu_data->v[it] = _memory.memory[cpu_data->i + it];
                     }
                 }

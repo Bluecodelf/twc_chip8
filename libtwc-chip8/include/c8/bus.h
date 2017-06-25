@@ -13,8 +13,8 @@ namespace c8 {
     public:
         virtual ~display_bus() {}
 
-        // Should return the old pixel state
-        virtual bool set_pixel_state(int x, int y, bool new_state) = 0;
+        virtual void set_pixel_state(int x, int y, bool new_state) = 0;
+        virtual bool get_pixel_state(int x, int y) = 0;
 
         virtual void update() = 0;
         virtual void clear() = 0;

@@ -3,7 +3,7 @@
 display::display(SDL_Renderer *renderer) :
         _renderer(renderer) {
     _texture = SDL_CreateTexture(renderer,
-                                 SDL_PIXELFORMAT_RGBA32,
+                                 SDL_PIXELFORMAT_RGB888,
                                  SDL_TEXTUREACCESS_STREAMING,
                                  DISPLAY_WIDTH, DISPLAY_HEIGHT);
 
@@ -11,14 +11,16 @@ display::display(SDL_Renderer *renderer) :
     memset(_pixels, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT * sizeof(unsigned int));
 }
 
-bool display::set_pixel_state(int x, int y, bool new_state) {
-    if (x >= 0 && x < DISPLAY_WIDTH && y >= 0 && y < DISPLAY_HEIGHT) {
-        int px = x + y * DISPLAY_WIDTH;
-        bool was_active = (_pixels[px] != 0);
-        _pixels[px] = new_state ? 0xFFFFFFFF : 0;
-        return was_active;
-    }
-    return false;
+void display::set_pixel_state(int x, int y, bool new_state) {
+    x %= DISPLAY_WIDTH;
+    y %= DISPLAY_HEIGHT;
+    _pixels[x + y * DISPLAY_WIDTH] = new_state ? 0xFFFFFF : 0;
+}
+
+bool display::get_pixel_state(int x, int y) {
+    x %= DISPLAY_WIDTH;
+    y %= DISPLAY_HEIGHT;
+    return _pixels[x + y * DISPLAY_WIDTH] != 0;
 }
 
 void display::update() {

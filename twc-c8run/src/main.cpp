@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
     while (!cpu_input.should_quit()) {
         cpu.step();
         cpu_input.update_events();
+        SDL_Delay(2);
     }
 
     SDL_DestroyWindow(window);

@@ -39,7 +39,7 @@ namespace c8 {
     private:
         // CPU internals (memory and RNG)
         memory _memory;
-        std::default_random_engine _rand;
+        std::mt19937 _rand;
         std::uniform_int_distribution<vm_byte> _dist;
 
         // Buses
