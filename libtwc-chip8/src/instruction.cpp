@@ -82,9 +82,9 @@ namespace {
             return 0;
         }
 
-        // Use Intel intrinsics for bsr if available
+        // Use Intel intrinsics for bsf if available
 #ifdef USE_INTEL_INTRINSICS
-        return _bit_scan_reverse(mask);
+        return _bit_scan_forward(mask);
 #else
         for (int it = 0; it <= 31; it++) {
             if (mask & (1 << it)) {

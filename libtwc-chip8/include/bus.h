@@ -6,6 +6,8 @@
 #ifndef TWC_CHIP8_BUS_H
 #define TWC_CHIP8_BUS_H
 
+#include "memory.h"
+
 namespace c8 {
     class display_bus {
     public:

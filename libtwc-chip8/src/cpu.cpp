@@ -27,7 +27,7 @@ namespace {
             0xF0, 0x80, 0x80, 0x80, 0xF0, // C
             0xE0, 0x90, 0x90, 0x90, 0xE0, // D
             0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-            0xF0, 0x80, 0xF0, 0x80, 0xF0  // F
+            0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     };
 }
 
@@ -54,6 +54,11 @@ cpu::cpu(
 
     // Copy the font in memory
     memcpy(_memory.interpreter.font, FONT, 80);
+
+    // Initialize some registers
+    _memory.interpreter.sp = 0;
+    _memory.interpreter.pc = 0x200;
+    _memory.interpreter.i = 0;
 }
 
 void cpu::load_in_memory(const std::vector<std::uint8_t> &data, unsigned int offset) {
@@ -77,7 +82,7 @@ void cpu::step() {
     auto cpu_data = &_memory.interpreter;
 
     // Forced overhead, as the virtual CPU is big endian.
-    vm_instruction inst = _memory.memory[cpu_data->pc] | (_memory.memory[cpu_data->pc + 1] << 8);
+    vm_instruction inst = _memory.memory[cpu_data->pc + 1] | (_memory.memory[cpu_data->pc] << 8);
 
     // Reading Chip-8 instructions is tricky if you want it to be fast, because opcodes
     // are masked (and thus the CPU can't map them from a jump table). However, we can group
@@ -87,13 +92,13 @@ void cpu::step() {
         case 0x0000:
             if (inst == 0x00E0) {
                 _display.clear();
-                _memory.interpreter.pc += 2;
             } else if (inst == 0x00EE) {
                 if (_memory.interpreter.pc == 0) {
                     throw cpu_exception("Can't return from subroutine: stack is empty");
                 }
                 cpu_data->pc = cpu_data->stack[--cpu_data->sp];
             }
+            cpu_data->pc += 2;
             break;
         case 0x1000:
             cpu_data->pc = _ADDR(_A1);
@@ -116,9 +121,11 @@ void cpu::step() {
             break;
         case 0x6000:
             cpu_data->v[_A3 & 0xF] = _BYTE(_A1);
+            cpu_data->pc += 2;
             break;
         case 0x7000:
             cpu_data->v[_A3 & 0xF] += _BYTE(_A1);
+            cpu_data->pc += 2;
             break;
         case 0x8000: {
             vm_byte &lhs = cpu_data->v[_A3 & 0xF];
@@ -163,31 +170,36 @@ void cpu::step() {
                     break;
             }
         }
+            cpu_data->pc += 2;
             break;
         case 0x9000:
             cpu_data->pc += (_REG(_A3) != _REG(_A2)) ? 4 : 2;
             break;
         case 0xA000:
             cpu_data->i = _ADDR(_A1);
+            cpu_data->pc += 2;
             break;
         case 0xB000:
             cpu_data->pc = (_REG(0) + _ADDR(_A1));
             break;
         case 0xC000:
             cpu_data->v[_A3 & 0xF] = _dist(_rand) & _BYTE(_A1);
+            cpu_data->pc += 2;
             break;
         case 0xD000: {
             int sprite_size = _NIB(_A1);
             int y_offset = _REG(_A2);
             int x_offset = _REG(_A3);
             for (int y = 0; y < sprite_size; y++) {
-                vm_byte row = _memory.memory[cpu_data->i];
+                vm_byte row = _memory.memory[cpu_data->i + y];
                 for (int x = 0; x < 8; x++) {
-                    _display.set_pixel_state(x + x_offset, y + y_offset, (row >> (7 - x)));
+                    _display.set_pixel_state(x + x_offset, y + y_offset,
+                                             (((row >> (7 - x)) & 1) == 1));
                 }
             }
             _display.update();
         }
+            cpu_data->pc += 2;
             break;
         case 0xE000: {
             bool pressed = _keyboard.is_key_pressed(_REG(_A3));
@@ -238,6 +250,7 @@ void cpu::step() {
                     break;
             }
         }
+            cpu_data->pc += 2;
             break;
         default:
             break;

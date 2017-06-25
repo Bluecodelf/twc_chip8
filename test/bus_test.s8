@@ -1,0 +1,22 @@
+init:   CLS
+        LD VE, 30
+
+fntin:  LD V0, 0
+        LD V1, 0
+        LD V2, 0
+fntlp:  CALL %fntdrw
+        SE V0, 16
+        JP %fntlp
+        JP %snd
+
+fntdrw: LD F, V0
+        DRW V1, V2, 5
+        ADD V1, 4
+        ADD V0, 1
+        RET
+
+snd:    LD ST, VE
+
+slp:    LD VF, K
+        LD ST, VE
+        JP %slp
