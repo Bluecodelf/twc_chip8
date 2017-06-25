@@ -226,7 +226,7 @@ void cpu::step() {
                 case 0x18:
                     _sound.play_sound(reg);
                     break;
-                case 0xF1:
+                case 0x1E:
                     cpu_data->i += reg;
                     break;
                 case 0x29:
