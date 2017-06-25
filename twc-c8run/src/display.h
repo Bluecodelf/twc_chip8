@@ -2,7 +2,7 @@
 #define TWC_CHIP8_DISPLAY_H
 
 #include <SDL.h>
-#include <bus.h>
+#include <c8/bus.h>
 
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32

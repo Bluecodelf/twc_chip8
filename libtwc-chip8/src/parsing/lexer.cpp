@@ -5,7 +5,7 @@
 
 #include "lexer.h"
 #include "constants.h"
-#include "program.h"
+#include "c8/program.h"
 
 #include <regex>
 

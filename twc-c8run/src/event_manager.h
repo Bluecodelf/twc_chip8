@@ -2,8 +2,8 @@
 #define TWC_CHIP8_KEYBOARD_H
 
 #include <SDL.h>
-#include <bus.h>
-#include <memory.h>
+#include <c8/bus.h>
+#include <c8/memory.h>
 
 class event_manager : public c8::keyboard_bus {
 public:

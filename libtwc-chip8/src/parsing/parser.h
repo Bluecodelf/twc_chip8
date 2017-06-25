@@ -7,9 +7,9 @@
 #define TWC_CHIP8_PARSER_H
 
 #include <vector>
-#include <memory.h>
-#include <program.h>
-#include <instruction.h>
+#include <c8/memory.h>
+#include <c8/program.h>
+#include <c8/instruction.h>
 
 #include "lexer.h"
 

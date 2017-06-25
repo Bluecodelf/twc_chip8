@@ -3,8 +3,8 @@
 // Copyright (c) 2017 Tiwind Software. All rights reserved.
 //
 
-#include "cpu.h"
-#include "instruction.h"
+#include "c8/cpu.h"
+#include "c8/instruction.h"
 
 #include <iostream>
 

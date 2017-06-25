@@ -3,7 +3,7 @@
 // Copyright (c) 2017 Tiwind Software. All rights reserved.
 //
 
-#include "program.h"
+#include "c8/program.h"
 #include "parsing/lexer.h"
 #include "parsing/parser.h"
 

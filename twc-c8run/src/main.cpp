@@ -1,5 +1,5 @@
 #include <SDL.h>
-#include <cpu.h>
+#include <c8/cpu.h>
 #include <fstream>
 #include <iostream>
 #include <mutex>

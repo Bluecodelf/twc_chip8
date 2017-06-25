@@ -3,7 +3,7 @@
 // Copyright (c) 2017 Tiwind Software. All rights reserved.
 //
 
-#include "instruction.h"
+#include "c8/instruction.h"
 #include "constants.h"
 
 #include <map>
